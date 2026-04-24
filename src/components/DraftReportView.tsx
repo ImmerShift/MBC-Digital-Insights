@@ -1,224 +1,147 @@
 import React, { useState } from 'react';
-import { FileText, Save, Download, Sparkles, Send, Presentation, Loader2, ArrowRight, LayoutTemplate, AlignLeft, RefreshCw, Copy, Check } from 'lucide-react';
+import { FileText, Save, Download, Sparkles, Send, Loader2, RefreshCw, Copy, Check, Edit3, Bot } from 'lucide-react';
+import Markdown from 'react-markdown';
+import { metaAdsCampaigns, metaOrganicPosts, ga4Kpis, youtubeKpis } from '../utils/mockData';
+import { generateMonthlyDraft } from '../lib/gemini';
 
 export function DraftReportView() {
   const [isExporting, setIsExporting] = useState(false);
-  const [viewMode, setViewMode] = useState<'narrative' | 'slide'>('narrative');
+  const [editMode, setEditMode] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(1);
+  
+  const [draftContent, setDraftContent] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleExport = () => {
+  const handleGenerateDraft = async () => {
+    setIsGenerating(true);
+    setEditMode(false);
+    
+    const context = {
+      ga4: ga4Kpis,
+      metaAds: metaAdsCampaigns,
+      metaOrganic: metaOrganicPosts,
+      youtube: youtubeKpis
+    };
+
+    try {
+      const text = await generateMonthlyDraft(context);
+      if (text) setDraftContent(text);
+    } catch (e) {
+      setDraftContent('An error occurred while weaving the narrative. Please check your API key and connection.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleExportPdf = () => {
     setIsExporting(true);
     setTimeout(() => {
       setIsExporting(false);
-      alert('Draft successfully exported to Google Slides! (Mock Action)');
+      alert('Draft successfully exported to PDF! (Mock Action)');
     }, 2000);
   };
 
   const handleCopy = () => {
+    navigator.clipboard.writeText(draftContent);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const outlineSlides = [
-    { id: 1, title: 'Executive Summary', ai: true },
-    { id: 2, title: 'Revenue Correlation', ai: true },
-    { id: 3, title: 'Meta Ads Breakdown', ai: false },
-    { id: 4, title: 'Website Behavior', ai: true },
-    { id: 5, title: 'Action Items (May)', ai: true }
-  ];
-
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] min-h-[700px] bg-white rounded-2xl border border-[#EAE3D9] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+    <div className="flex flex-col min-h-[calc(100vh-200px)] bg-[#F9F7F4] rounded-2xl border border-[#EAE3D9] overflow-hidden">
       
-      {/* Draft Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 md:p-8 border-b border-[#EAE3D9] bg-[#FDF8F3] shrink-0 gap-4">
-        <div>
-          <h2 className="text-2xl lg:text-3xl font-serif font-bold text-[#3E1510] flex items-center tracking-tight">
-            <span className="bg-white p-2 rounded-xl shadow-sm border border-[#EAE3D9] mr-4">
-              <FileText className="w-6 h-6 text-[#A43927]" />
-            </span>
-            Month-End Narrative Draft
-          </h2>
-          <p className="text-sm text-[#A88C87] mt-2 font-medium max-w-xl leading-relaxed">
-            Review the AI-synthesized qualitative analysis before finalizing. Content is fully editable.
-          </p>
+      {/* Action Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between p-6 border-b border-[#EAE3D9] bg-white gap-4">
+        <div className="flex items-center space-x-3">
+           <div className="w-10 h-10 rounded-full bg-[#FDF8F3] border border-[#F5E1C8] flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5 text-[#A43927]" />
+            </div>
+            <div>
+              <h2 className="text-xl font-serif font-bold text-[#3E1510]">Executive Brief</h2>
+              <p className="text-xs text-[#A88C87] font-medium uppercase tracking-wider">Month-End Narrative</p>
+            </div>
         </div>
         
-        <div className="flex space-x-3 items-center w-full sm:w-auto">
-          {/* Toggle View Mode */}
-          <div className="flex items-center bg-[#EAE3D9]/40 border border-[#EAE3D9] rounded-xl p-1 w-full sm:w-auto">
-            <button 
-              onClick={() => setViewMode('narrative')}
-              className={`flex-1 sm:flex-none flex items-center justify-center px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'narrative' ? 'bg-white text-[#3E1510] shadow-sm' : 'text-[#A88C87] hover:text-[#5C4541]'}`}
-            >
-              <AlignLeft className="w-4 h-4 mr-2" />
-              Document
-            </button>
-            <button 
-              onClick={() => setViewMode('slide')}
-              className={`flex-1 sm:flex-none flex items-center justify-center px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'slide' ? 'bg-white text-[#3E1510] shadow-sm' : 'text-[#A88C87] hover:text-[#5C4541]'}`}
-            >
-              <LayoutTemplate className="w-4 h-4 mr-2" />
-              Slides
-            </button>
-          </div>
+        <div className="flex items-center space-x-3 w-full sm:w-auto flex-wrap gap-y-2 sm:gap-y-0 justify-end sm:justify-start">
+          <button 
+             onClick={handleGenerateDraft}
+             disabled={isGenerating}
+             className="flex items-center justify-center px-4 py-2 border border-transparent bg-[#3E1510] text-[#EAE3D9] hover:bg-[#522019] rounded-lg text-sm font-bold transition-all disabled:opacity-50"
+          >
+             {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Bot className="w-4 h-4 mr-2 text-[#DDA77B]" />}
+             Generate Draft
+          </button>
+
+          <button 
+             onClick={() => setEditMode(!editMode)}
+             className={`flex items-center justify-center px-4 py-2 border rounded-lg text-sm font-bold transition-all ${editMode ? 'bg-[#FDF8F3] border-[#DDA77B] text-[#7A2B20]' : 'bg-white border-[#EAE3D9] text-[#A88C87] hover:text-[#5C4541] hover:border-[#DDA77B]'}`}
+          >
+             <Edit3 className="w-4 h-4 mr-2" />
+             {editMode ? 'Editing' : 'Edit Mode'}
+          </button>
+          
+          <button 
+             onClick={handleCopy}
+             className="flex items-center justify-center px-4 py-2 bg-white border border-[#DDA77B] text-[#7A2B20] hover:bg-[#FDF8F3] rounded-lg text-sm font-bold transition-all"
+          >
+             {isCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+             Copy to Clipboard
+          </button>
+
+          <button 
+            onClick={handleExportPdf}
+            disabled={isExporting}
+            className="flex items-center justify-center px-4 py-2 bg-white border border-[#DDA77B] text-[#7A2B20] hover:bg-[#FDF8F3] rounded-lg text-sm font-bold transition-all disabled:opacity-50"
+          >
+            {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            Export to PDF
+          </button>
         </div>
       </div>
 
       {/* Editor Space */}
-      <div className="flex-1 flex overflow-hidden">
-        
-        {/* Left Column: Outline/Slides */}
-        <div className="w-[280px] lg:w-[320px] shrink-0 border-r border-[#EAE3D9] bg-[#FDF8F3]/50 overflow-y-auto hidden md:flex flex-col">
-          <div className="p-6 border-b border-[#EAE3D9] shrink-0 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-            <p className="text-[11px] font-bold text-[#A88C87] uppercase tracking-widest flex items-center justify-between">
-              Report Outline
-              <Sparkles className="w-3.5 h-3.5 text-[#DDA77B]" />
-            </p>
-          </div>
-          <div className="space-y-1 py-4 px-2 flex-1 overflow-y-auto custom-scrollbar">
-            {outlineSlides.map(slide => (
-              <div 
-                key={slide.id} 
-                onClick={() => setActiveSlide(slide.id)}
-                className={`group px-4 py-3 rounded-xl cursor-pointer transition-all flex items-center justify-between ${activeSlide === slide.id ? 'bg-white shadow-sm border border-[#EAE3D9]' : 'border border-transparent text-[#7A2B20] hover:bg-[#F9F7F4]'}`}
-              >
-                <div className="flex items-center min-w-0 pr-3">
-                  <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold mr-3 shrink-0 ${activeSlide === slide.id ? 'bg-[#FDF8F3] text-[#A43927]' : 'bg-[#EAE3D9]/50 text-[#A88C87]'}`}>
-                    {slide.id}
-                  </div>
-                  <span className={`text-sm font-semibold truncate ${activeSlide === slide.id ? 'text-[#3E1510]' : 'text-[#7A2B20]'}`}>
-                    {slide.title}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2 shrink-0">
-                  {activeSlide === slide.id && slide.ai && (
-                    <button className="text-[#A46A38] hover:text-[#A43927] transition-colors p-1.5 rounded-md hover:bg-[#FDF8F3] opacity-0 group-hover:opacity-100" title="Regenerate Section">
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Column: Narrative Editor */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col bg-[#F9F7F4]">
+      <div className="flex-1 flex overflow-y-auto px-4 py-8 md:py-12 justify-center custom-scrollbar">
           
-          {/* Main Paper Area */}
-          <div className="flex-1 p-6 md:p-12 lg:p-16 flex justify-center">
+        {/* A4 Paper Container */}
+        <div className="w-full max-w-[850px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-[#EAE3D9] rounded-sm p-8 md:p-16 lg:p-20 min-h-[1056px] relative">
             
-            <div className={`bg-white shadow-xl shadow-black/[0.03] border border-[#EAE3D9] w-full max-w-[850px] mx-auto rounded-xl transition-all duration-300 ${viewMode === 'slide' ? 'aspect-[16/9] flex flex-col justify-center p-12 md:p-16 lg:p-24' : 'p-10 md:p-16 min-h-full'}`}>
-              
-              <div className="flex justify-between items-start mb-10 group/header">
-                <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-[#FDF8F3] border border-[#F5E1C8] text-[#A43927] font-semibold text-[11px] uppercase tracking-widest">
-                  <Sparkles className="w-3 h-3" />
-                  <span>AI Drafted Content</span>
-                </div>
-                {viewMode === 'narrative' && (
-                  <button 
-                    onClick={handleCopy}
-                    className="opacity-0 group-hover/header:opacity-100 transition-opacity flex items-center space-x-2 px-3 py-1.5 rounded-lg text-[#7A2B20] hover:bg-[#FDF8F3] hover:text-[#A43927] text-xs font-bold"
-                  >
-                    {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{isCopied ? 'Copied' : 'Copy text'}</span>
-                  </button>
-                )}
+            <div className="flex justify-between items-start mb-12 border-b border-[#EAE3D9] pb-8">
+              <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-[#FDF8F3] border border-[#F5E1C8] text-[#A43927] font-semibold text-[11px] uppercase tracking-widest">
+                <Sparkles className="w-3 h-3" />
+                <span>AI-Synthesized Brief</span>
               </div>
-
-              {/* Editable Content Space (Changes based on active slide) */}
-              <div key={activeSlide} className="space-y-8 outline-none animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <h1 
-                  className={`font-serif font-bold text-[#3E1510] leading-tight outline-none focus:bg-[#FDF8F3]/50 rounded-lg -ml-4 p-4 transition-colors ${viewMode === 'slide' ? 'text-4xl md:text-5xl lg:text-6xl text-center' : 'text-3xl md:text-4xl'}`} 
-                  contentEditable 
-                  suppressContentEditableWarning
-                >
-                  {outlineSlides.find(s => s.id === activeSlide)?.title || 'Draft Content'}
-                </h1>
-
-                <div className={`text-[#5C4541] outline-none focus:bg-[#FDF8F3]/50 rounded-lg -ml-4 p-4 transition-colors ${viewMode === 'slide' ? 'text-xl md:text-2xl text-center font-medium opacity-90' : 'text-base md:text-lg leading-relaxed space-y-6 font-serif'}`} contentEditable suppressContentEditableWarning>
-                  {activeSlide === 1 && (
-                    <>
-                      <p>
-                        April saw a massive <strong className="text-[#3E1510]">300% spike in digital revenue</strong> during the week of the 14th. This growth wasn't accidental; it was a direct result of our integrated content strategy synchronizing perfectly with our retargeting campaigns.
-                      </p>
-
-                      <ul className={`list-disc pl-5 space-y-4 marker:text-[#DDA77B] ${viewMode === 'slide' ? 'text-left inline-block mt-8 text-lg font-sans' : 'font-sans'}`}>
-                        <li>
-                          <strong className="text-[#3E1510]">The Catalyst:</strong> The 'Sunset Session' TikTok and Instagram Reel format organically reached over 1.4 million combined accounts.
-                        </li>
-                        <li>
-                          <strong className="text-[#3E1510]">The Conversion:</strong> Our 'RET_Website_Visitors_30D' Meta ad campaign captured this intent aggressively, returning an astonishing 7.2x ROAS.
-                        </li>
-                        <li>
-                          <strong className="text-[#3E1510]">The Destination:</strong> High-intent traffic flooded the VIP Daybed page (averaging 3:15 time-on-page), suggesting we need a frictionless Checkout or auto-Concierge chat trigger active there for May.
-                        </li>
-                      </ul>
-                    </>
-                  )}
-                  {activeSlide === 2 && (
-                    <p>There is a strong correlation between our boosted Facebook presence and the surge in high-value VIP daybed bookings on April 14th. Return on Ad Spend (ROAS) hit exceptional levels during this narrow window, indicating highly aligned messaging.</p>
-                  )}
-                  {activeSlide === 3 && (
-                    <p>Meta Ads breakdown is pending data ingestion from the Facebook Marketing API integration. Please switch to the Meta module to review the live campaign status.</p>
-                  )}
-                  {activeSlide === 4 && (
-                    <p>Website bounce rates plummeted on mobile devices during our promotional push. A notable 65% of all converted traffic originated from TikTok, skipping the homepage entirely and landing directly on the booking engine via Linktree.</p>
-                  )}
-                  {activeSlide === 5 && (
-                    <ul className={`list-disc pl-5 space-y-4 marker:text-[#DDA77B] ${viewMode === 'slide' ? 'text-left inline-block mt-8 text-lg font-sans' : 'font-sans'}`}>
-                      <li>Double-down on short-form vertical video highlighting the Sunset view.</li>
-                      <li>Allocate 20% more budget to the 30-day Retargeting audience.</li>
-                      <li>Launch the auto-chat concierge feature on the Daybed reservation page.</li>
-                    </ul>
-                  )}
-                </div>
-              </div>
-
             </div>
-          </div>
 
-          {/* AI Prompter & Export Fixed Base */}
-          <div className="shrink-0 border-t border-[#EAE3D9] bg-white sticky bottom-0 z-20 shadow-[0_-4px_20px_rgb(0,0,0,0.03)]">
-             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center p-4 md:p-6 gap-6">
-               
-               {/* Chat-style input box */}
-               <div className="flex-1 w-full bg-[#FDF8F3] border border-[#EAE3D9] rounded-2xl p-2 focus-within:ring-2 focus-within:ring-[#DDA77B]/50 transition-all shadow-inner">
-                 <div className="flex items-end">
-                   <textarea 
-                     className="flex-1 bg-transparent border-none p-3 text-sm text-[#3E1510] placeholder-[#A88C87] outline-none resize-none min-h-[44px] max-h-[120px] custom-scrollbar"
-                     rows={1}
-                     placeholder="Ask AI to refine logic, make it more formal, or summarize differently..."
-                   ></textarea>
-                   <button className="shrink-0 w-10 h-10 ml-2 rounded-xl bg-[#3E1510] text-[#E6DFD6] flex items-center justify-center hover:bg-[#7A2B20] transition-transform active:scale-95 shadow-sm" title="Send instruction">
-                     <Sparkles className="w-4 h-4" />
-                   </button>
+            {/* Content Area */}
+            {isGenerating ? (
+              <div className="space-y-4 animate-pulse">
+                <div className="h-10 bg-[#EAE3D9]/50 w-2/3 mb-12"></div>
+                <div className="h-4 bg-[#EAE3D9]/50 rounded-full w-full mb-3"></div>
+                <div className="h-4 bg-[#EAE3D9]/50 rounded-full w-5/6 mb-3"></div>
+                <div className="h-4 bg-[#EAE3D9]/50 rounded-full w-4/6 mb-3"></div>
+                <div className="h-6 bg-[#EAE3D9]/50 rounded-full w-1/2 mt-12 mb-6"></div>
+                <div className="h-4 bg-[#EAE3D9]/50 rounded-full w-full mb-3"></div>
+                <div className="h-4 bg-[#EAE3D9]/50 rounded-full w-full mb-3"></div>
+                <div className="h-4 bg-[#EAE3D9]/50 rounded-full w-3/4 mb-3"></div>
+              </div>
+            ) : (
+               editMode ? (
+                 <textarea 
+                   value={draftContent}
+                   onChange={(e) => setDraftContent(e.target.value)}
+                   className="w-full h-full min-h-[600px] resize-none outline-none text-[1.05rem] leading-[2] font-sans text-[#5C4541] custom-scrollbar focus:ring-1 focus:ring-[#DDA77B]/30 rounded p-2"
+                   placeholder="Start typing..."
+                 />
+               ) : (
+                 <div className="markdown-body">
+                   <Markdown>{draftContent || 'No narrative generated.'}</Markdown>
                  </div>
-               </div>
-
-               <div className="w-full md:w-auto shrink-0 flex items-center space-x-3">
-                 <button className="hidden md:flex items-center px-4 py-3 bg-white border border-[#EAE3D9] rounded-xl text-[#5C4541] font-bold text-sm hover:bg-[#F9F7F4] transition-colors shadow-sm">
-                   <Save className="w-4 h-4 mr-2" />
-                   Save
-                 </button>
-                 <button 
-                  onClick={handleExport}
-                  disabled={isExporting}
-                  className="w-full md:w-auto flex items-center justify-center px-6 py-3.5 bg-[#7A2B20] text-white rounded-xl font-bold text-sm shadow-md shadow-[#7A2B20]/20 hover:bg-[#522019] transition-all disabled:opacity-50 transform hover:-translate-y-0.5"
-                 >
-                  {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Presentation className="w-4 h-4 mr-2" />}
-                  Export to Slides
-                 </button>
-               </div>
-
-             </div>
-          </div>
-
+               )
+            )}
+            
         </div>
-
       </div>
+
     </div>
   );
 }

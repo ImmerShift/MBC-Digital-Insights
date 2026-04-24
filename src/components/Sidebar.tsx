@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Home, BarChart2, PieChart, MessageSquare, FileText, Settings, Navigation, ChevronLeft, ChevronRight, Globe, X, Video, Megaphone, Search, PlaySquare } from 'lucide-react';
+import { auth } from '../lib/firebase';
 
 interface SidebarProps {
   activeTab?: 'executive' | 'meta' | 'ga4' | 'tiktok' | 'gads' | 'gsc' | 'youtube' | 'draft' | 'connectors';
@@ -169,6 +170,11 @@ export function Sidebar({ activeTab, setActiveTab, isMobileOpen, onCloseMobile }
             {!isCollapsed && <span className={`whitespace-nowrap transition-colors ${isActive('connectors') ? 'text-white' : ''}`}>Connectors Setup</span>}
           </button>
           
+          <button onClick={() => auth.signOut()} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-3'} py-2 rounded-lg transition-colors text-sm hover:bg-[#522019]/50 text-[#A43927] hover:text-[#DDA77B]`} title="Sign Out">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${!isCollapsed && 'mr-3'}`}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            {!isCollapsed && <span className="whitespace-nowrap">Sign Out</span>}
+          </button>
+
           {/* ImmerShift Footer Credit */}
           {!isCollapsed && (
             <div className="px-3 pt-2 text-[10px] text-[#A88C87] border-t border-[#522019]/50 leading-relaxed whitespace-nowrap">

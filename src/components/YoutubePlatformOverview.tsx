@@ -1,6 +1,7 @@
 import React from 'react';
 import { useYouTubeData } from '../hooks/useRealData';
-import { PlaySquare, Clock, Users, Activity, Sparkles, Smartphone, Video, Loader2 } from 'lucide-react';
+import { PlaySquare, Clock, Users, Activity, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { YouTubeVideo } from '../types';
 
 export function YoutubePlatformOverview() {
   const { overview, topVideos, isLoading, error } = useYouTubeData();
@@ -19,7 +20,7 @@ export function YoutubePlatformOverview() {
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
           <span className="text-red-600 font-bold">!</span>
         </div>
-        <h3 className="font-serif font-bold text-xl text-[#3E1510] mb-2">Failed to load YouTube data</h3>
+        <h3 className="font-serif font-bold text-xl text-[#3E1510] mb-2">The oracle is currently unreachable</h3>
         <p className="text-[#A43927] max-w-md">{error}</p>
       </div>
     );
@@ -85,27 +86,27 @@ export function YoutubePlatformOverview() {
           {/* Top Videos Table */}
           <div className="bg-white border border-[#EAE3D9] rounded-2xl overflow-hidden shadow-sm">
             <div className="px-6 py-4 border-b border-[#EAE3D9] bg-[#FDF8F3] flex justify-between items-center">
-              <h3 className="font-serif font-bold text-[#3E1510] text-lg">Top Performing Videos</h3>
+              <h3 className="font-serif font-bold text-[#3E1510] text-lg">Resonant Visuals</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-[10px] uppercase tracking-wider text-[#A88C87] bg-white border-b border-[#EAE3D9]">
                   <tr>
-                    <th className="px-6 py-4 font-bold cursor-pointer hover:bg-slate-50">Video ID</th>
+                    <th className="px-6 py-4 font-bold cursor-pointer hover:bg-slate-50">Video Details</th>
                     <th className="px-6 py-4 font-bold text-right cursor-pointer hover:bg-slate-50">Views</th>
                     <th className="px-6 py-4 font-bold text-right cursor-pointer hover:bg-slate-50">Likes</th>
                     <th className="px-6 py-4 font-bold text-right cursor-pointer hover:bg-slate-50">Shares</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#EAE3D9]">
-                  {youtubeVideos.map((video: any, idx: number) => (
+                  {youtubeVideos.map((video: YouTubeVideo, idx: number) => (
                     <tr key={idx} className="hover:bg-[#F9F7F4] transition-colors cursor-pointer">
                       <td className="px-6 py-4">
-                        <span className="font-medium text-[#5C4541] truncate max-w-[200px]" title={video.videoId}>{video.videoId}</span>
+                        <span className="font-medium text-[#5C4541] truncate max-w-[200px]" title={video.title || video.videoId}>{video.title || video.videoId}</span>
                       </td>
                       <td className="px-6 py-4 text-right text-[#3E1510] font-bold">{video.views.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-right text-[#5C4541]">{video.likes.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-right text-[#2E6B3B] font-bold">{video.shares}</td>
+                      <td className="px-6 py-4 text-right text-[#5C4541]">{(video.likes || 0).toLocaleString()}</td>
+                      <td className="px-6 py-4 text-right text-[#2E6B3B] font-bold">{video.shares || 0}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -128,18 +129,18 @@ export function YoutubePlatformOverview() {
                   <div className="w-8 h-8 rounded-full bg-[#DDA77B]/20 flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-[#A43927]" />
                   </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A2B20]">AI Analysis</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A2B20]">Intelligence</span>
                 </div>
                 
                 <h4 className="font-serif font-bold text-lg text-[#3E1510] mb-2 leading-tight">
-                  Long-form drives retention, Shorts drive capture.
+                  Immersion drives connection; glimpses spark curiosity.
                 </h4>
                 <p className="text-[#5C4541] text-sm leading-relaxed mb-4">
-                  The <span className="font-semibold italic">Sunset DJ Set</span> accounted for 76% of total watch time, cementing channel authority. However, Shorts generated 85% of the new subscribers.
+                  The extended <span className="font-semibold italic">Sunset DJ Set</span> anchors our guests, commanding 76% of total watch time and fostering deep brand affinity. Yet, it is the fleeting, organic moments in our Shorts that invite the majority of new subscribers to join our journey.
                 </p>
                 <div className="mt-4 pt-4 border-t border-[#DDA77B]/20">
                   <p className="text-[#A43927] text-xs font-bold">
-                    Recommendation: Clip the most engaged 30-second segments from the "Sunset DJ Set" and syndicate them as Shorts over the next two weeks to maximize sub conversions.
+                    Suggestion: Curate the most naturally evocative 30-second fragments from the "Sunset DJ Set" to share as brief glimpses over the coming weeks, inviting a wider audience to experience the full ambiance.
                   </p>
                 </div>
              </div>

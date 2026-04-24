@@ -1,7 +1,8 @@
 import React from 'react';
 import { useGA4Data } from '../hooks/useRealData';
-import { Globe, Users, Clock, MousePointer2, Sparkles, TrendingUp, TrendingDown, Minus, PieChart as PieChartIcon, Loader2 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
+import { Globe, Users, Clock, MousePointer2, Sparkles, PieChart as PieChartIcon, Loader2, AlertCircle } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import { GA4TopPage, GA4TrafficSource } from '../types';
 
 export function Ga4PlatformOverview() {
   const { overview, topPages, trafficSources, isLoading, error } = useGA4Data();
@@ -20,7 +21,7 @@ export function Ga4PlatformOverview() {
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
           <span className="text-red-600 font-bold">!</span>
         </div>
-        <h3 className="font-serif font-bold text-xl text-[#3E1510] mb-2">Failed to load GA4 data</h3>
+        <h3 className="font-serif font-bold text-xl text-[#3E1510] mb-2">The oracle is currently unreachable</h3>
         <p className="text-[#A43927] max-w-md">{error}</p>
       </div>
     );
@@ -40,7 +41,7 @@ export function Ga4PlatformOverview() {
 
   // Give colors to traffic sources
   const sourceColors = ['#3E1510', '#7A2B20', '#DDA77B', '#A88C87', '#EAE3D9'];
-  const formattedSources = ga4TrafficSources.map((s: any, i: number) => ({
+  const formattedSources = ga4TrafficSources.map((s: GA4TrafficSource, i: number) => ({
     name: `${s.source} / ${s.medium}`,
     sessions: s.sessions,
     color: sourceColors[i % sourceColors.length]
@@ -96,7 +97,7 @@ export function Ga4PlatformOverview() {
           {/* Top Pages Table */}
           <div className="bg-white border border-[#EAE3D9] rounded-2xl overflow-hidden shadow-sm">
             <div className="px-6 py-4 border-b border-[#EAE3D9] bg-[#FDF8F3] flex justify-between items-center">
-              <h3 className="font-serif font-bold text-[#3E1510] text-lg">Top Performing Pages</h3>
+              <h3 className="font-serif font-bold text-[#3E1510] text-lg">Resonant Destinations</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
@@ -107,7 +108,7 @@ export function Ga4PlatformOverview() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#EAE3D9]">
-                  {ga4TopPages.map((page: any, idx: number) => (
+                  {ga4TopPages.map((page: GA4TopPage, idx: number) => (
                     <tr key={idx} className="hover:bg-[#F9F7F4] transition-colors cursor-pointer">
                       <td className="px-6 py-4">
                         <p className="font-semibold text-[#5C4541] truncate max-w-sm">{page.path}</p>
@@ -136,18 +137,18 @@ export function Ga4PlatformOverview() {
                   <div className="w-8 h-8 rounded-full bg-[#DDA77B]/20 flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-[#A43927]" />
                   </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A2B20]">AI Analysis</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A2B20]">Intelligence</span>
                 </div>
                 
                 <h4 className="font-serif font-bold text-lg text-[#3E1510] mb-2 leading-tight">
-                  VIP Daybed intent is exceptionally high
+                  A strong desire for elevated comfort
                 </h4>
                 <p className="text-[#5C4541] text-sm leading-relaxed mb-4">
-                  Visitors spending time on the <span className="font-semibold px-1 bg-white rounded border border-[#EAE3D9]">/vip-daybeds</span> page are averaging 03:15 per session. This is 140% higher than the site average, indicating strong read-through rates.
+                  Guests reading through the <span className="font-semibold px-1 bg-white rounded border border-[#EAE3D9]">/vip-daybeds</span> offering are spending significantly longer than average, savoring the details of the experience.
                 </p>
                 <div className="mt-4 pt-4 border-t border-[#DDA77B]/20">
                   <p className="text-[#A43927] text-xs font-bold flex items-center">
-                    Recommendation: Add an immediate "Chat with Concierge" auto-popup on this specific URL to capture high-intent leads faster.
+                    Suggestion: Offer a graceful "Connect with our Concierge" prompt on this page to transform contemplation into arrival.
                   </p>
                 </div>
              </div>
@@ -157,7 +158,7 @@ export function Ga4PlatformOverview() {
           <div className="bg-white border border-[#EAE3D9] rounded-2xl p-6 shadow-sm flex flex-col h-[320px]">
             <div className="flex items-center space-x-2 mb-4">
               <PieChartIcon className="w-5 h-5 text-[#3E1510]" />
-              <h3 className="font-serif font-bold text-[#3E1510] text-lg">Traffic by Source</h3>
+              <h3 className="font-serif font-bold text-[#3E1510] text-lg">Flow of Arrivals</h3>
             </div>
             
             <div className="flex-1 w-full relative">
@@ -193,7 +194,7 @@ export function Ga4PlatformOverview() {
             </div>
 
             <div className="mt-2 grid grid-cols-2 gap-2">
-               {formattedSources.map((source: any, idx: number) => (
+               {formattedSources.map((source: { name: string; color: string }, idx: number) => (
                  <div key={idx} className="flex items-center text-[11px] font-semibold text-[#5C4541]">
                    <div className="w-2.5 h-2.5 rounded-full mr-2 shrink-0" style={{ backgroundColor: source.color }}></div>
                    <span className="truncate" title={source.name}>{source.name}</span>

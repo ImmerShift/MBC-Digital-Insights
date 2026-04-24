@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Share2, Globe, Video, Megaphone, Search, PlaySquare, Mail, Store, AlertCircle, CheckCircle2, ChevronRight, Activity, Sparkles, Instagram, Link, Save, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Share2, Globe, Video, Megaphone, Search, PlaySquare, Mail, Store, AlertCircle, CheckCircle2, ChevronRight, Activity, Sparkles, Instagram, Link, Save, Loader2, X } from 'lucide-react';
 import { getWebAppUrl, saveWebAppUrl } from '../utils/api';
 
 const connectorCategories = [
   {
     title: 'Google Ecosystem',
     connectors: [
-      { id: 'ga4', name: 'Google Analytics 4', icon: Globe, status: 'connected', lastSync: 'Today at 08:30 AM', desc: 'Website traffic, user behavior, and e-commerce events' },
-      { id: 'gsc', name: 'Search Console', icon: Search, status: 'connected', lastSync: 'Yesterday', desc: 'Organic search performance and ranking keywords' },
-      { id: 'gads', name: 'Google Ads', icon: Megaphone, status: 'connected', lastSync: '2 hours ago', desc: 'PPC campaigns, conversion tracking, and spend' },
-      { id: 'youtube', name: 'YouTube', icon: PlaySquare, status: 'connected', lastSync: 'Today at 08:30 AM', desc: 'Video views, watch time, and subscriber growth' },
+      { id: 'ga4', name: 'Google Analytics 4', icon: Globe, status: 'connected', lastSync: 'Today at 08:30 AM', desc: 'Website traffic, user behavior, and e-commerce events', accountName: 'PT SYAH BALI VENTURA', queries: ['Executive Traffic Summary', 'Landing Page Resonance', 'Acquisition Channel ROI'] },
+      { id: 'gsc', name: 'Search Console', icon: Search, status: 'connected', lastSync: 'Yesterday', desc: 'Organic search performance and ranking keywords', accountName: 'maribeachclub.com', queries: ['Top Performing Keywords', 'Search Impression Growth'] },
+      { id: 'gads', name: 'Google Ads', icon: Megaphone, status: 'connected', lastSync: '2 hours ago', desc: 'PPC campaigns, conversion tracking, and spend', accountName: 'Mari Beach Club Ads (142-555-0198)', queries: ['Campaign ROAS Analysis', 'Cost Per Acquisition Trends'] },
+      { id: 'youtube', name: 'YouTube', icon: PlaySquare, status: 'connected', lastSync: 'Today at 08:30 AM', desc: 'Video views, watch time, and subscriber growth', accountName: 'Mari Beach Club Official', queries: ['Viewer Retention Rates', 'Top Video Engagement'] },
       { id: 'gmb', name: 'Google My Business', icon: Store, status: 'pending', lastSync: null, desc: 'Local search presence, profile views, and reviews' },
     ]
   },
   {
     title: 'Paid Social',
     connectors: [
-      { id: 'meta_ads', name: 'Meta Ads', icon: Share2, status: 'connected', lastSync: '1 hour ago', desc: 'Facebook and Instagram ad performance and ROAS' },
-      { id: 'tiktok_ads', name: 'TikTok Ads', icon: Video, status: 'connected', lastSync: '3 hours ago', desc: 'ByteDance ad network metrics and Conversions' },
+      { id: 'meta_ads', name: 'Meta Ads', icon: Share2, status: 'connected', lastSync: '1 hour ago', desc: 'Facebook and Instagram ad performance and ROAS', accountName: 'Mari Beach Club Business Manager', queries: ['Retargeting Multiplier', 'Ad Spend Efficiency'] },
+      { id: 'tiktok_ads', name: 'TikTok Ads', icon: Video, status: 'connected', lastSync: '3 hours ago', desc: 'ByteDance ad network metrics and Conversions', accountName: 'Mari Beach Club TikTok For Business', queries: ['Spark Ads Performance', 'Conversion Tracking'] },
     ]
   },
   {
     title: 'Organic Social',
     connectors: [
       { id: 'instagram', name: 'Instagram', icon: Instagram, status: 'not_connected', lastSync: null, desc: 'Feed posts, Reels, and follower growth' },
-      { id: 'tiktok_org', name: 'TikTok Organic', icon: Video, status: 'connected', lastSync: 'Today at 08:30 AM', desc: 'Short-form video virality and engagement' },
+      { id: 'tiktok_org', name: 'TikTok Organic', icon: Video, status: 'connected', lastSync: 'Today at 08:30 AM', desc: 'Short-form video virality and engagement', accountName: '@maribeachclubbali', queries: ['Viral Content Resonance', 'Follower Accumulation'] },
     ]
   },
   {
@@ -36,7 +36,7 @@ const connectorCategories = [
   {
     title: 'Custom',
     connectors: [
-      { id: 'mari_ai', name: 'Mari AI Concierge', icon: Sparkles, status: 'connected', lastSync: 'Live', desc: 'Chatbot queries, VIP bookings, reservations' },
+      { id: 'mari_ai', name: 'Mari AI Concierge', icon: Sparkles, status: 'connected', lastSync: 'Live', desc: 'Chatbot queries, VIP bookings, reservations', accountName: 'Mari Core API', queries: ['Concierge Conversion Rate', 'Peak Inquiry Times'] },
     ]
   }
 ];
@@ -47,6 +47,10 @@ export function ConnectorsSetup() {
   const [isSavingUrl, setIsSavingUrl] = useState(false);
   const [urlSaved, setUrlSaved] = useState(false);
   const [loadingUrl, setLoadingUrl] = useState(true);
+  const [expandedConnector, setExpandedConnector] = useState<string | null>(null);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
+  
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Count connected
   const allConnectors = connectorCategories.flatMap(c => c.connectors);
@@ -60,6 +64,10 @@ export function ConnectorsSetup() {
       setLoadingUrl(false);
     }
     fetchUrl();
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
 
   const handleSync = () => {
@@ -71,20 +79,33 @@ export function ConnectorsSetup() {
 
   const handleSaveUrl = async () => {
     setIsSavingUrl(true);
+    setErrorToast(null);
     try {
       await saveWebAppUrl(appScriptUrl);
       setUrlSaved(true);
-      setTimeout(() => setUrlSaved(false), 3000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setUrlSaved(false), 3000);
     } catch (err) {
       console.error(err);
-      alert("Failed to save Web App URL.");
+      setErrorToast("Failed to save Web App URL. Please try again.");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setErrorToast(null), 5000);
     } finally {
       setIsSavingUrl(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-12 pt-6">
+    <div className="space-y-6 max-w-4xl mx-auto pb-12 pt-6 relative">
+      {errorToast && (
+        <div className="fixed bottom-6 right-6 bg-[#FFF9F9] border border-[#FEE2E2] text-[#A43927] px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50 transition-all duration-300 transform translate-y-0 opacity-100">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm font-semibold">{errorToast}</span>
+          <button onClick={() => setErrorToast(null)} className="ml-2 text-[#A88C87] hover:text-[#3E1510]">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       {/* Header section with Sync button */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-[#EAE3D9] pb-6 gap-4">
         <div>
@@ -188,53 +209,89 @@ export function ConnectorsSetup() {
               {category.connectors.map((connector) => {
                 const Icon = connector.icon;
                 return (
-                  <div key={connector.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#F9F7F4] transition-colors group">
-                    
-                    <div className="flex items-start sm:items-center space-x-4">
-                      <div className="w-12 h-12 rounded-xl bg-[#FDF8F3] border border-[#F5E1C8] flex items-center justify-center shrink-0 shadow-sm group-hover:bg-white transition-colors">
-                        <Icon className="w-6 h-6 text-[#7A2B20]" />
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                          <h4 className="font-bold text-[#3E1510] text-base">{connector.name}</h4>
-                          {/* Badges */}
-                          {connector.status === 'connected' && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF4ED] text-[#2E6B3B] uppercase tracking-wider border border-[#D5E6D9]">
-                              <CheckCircle2 className="w-3 h-3 mr-1" /> Connected
-                            </span>
-                          )}
-                          {connector.status === 'pending' && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF9E6] text-[#B8860B] uppercase tracking-wider border border-[#F5E1C8]">
-                              <AlertCircle className="w-3 h-3 mr-1" /> Pending Approval
-                            </span>
-                          )}
-                          {connector.status === 'not_connected' && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#F5F5F5] text-[#808080] uppercase tracking-wider border border-[#E0E0E0]">
-                              Not Connected
-                            </span>
+                  <div key={connector.id} className="flex flex-col group transition-colors hover:bg-[#F9F7F4]">
+                    <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      
+                      <div className="flex items-start sm:items-center space-x-4">
+                        <div className="w-12 h-12 rounded-xl bg-[#FDF8F3] border border-[#F5E1C8] flex items-center justify-center shrink-0 shadow-sm group-hover:bg-white transition-colors">
+                          <Icon className="w-6 h-6 text-[#7A2B20]" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                            <h4 className="font-bold text-[#3E1510] text-base">{connector.name}</h4>
+                            {/* Badges */}
+                            {connector.status === 'connected' && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF4ED] text-[#2E6B3B] uppercase tracking-wider border border-[#D5E6D9]">
+                                <CheckCircle2 className="w-3 h-3 mr-1" /> Connected
+                              </span>
+                            )}
+                            {connector.status === 'pending' && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF9E6] text-[#B8860B] uppercase tracking-wider border border-[#F5E1C8]">
+                                <AlertCircle className="w-3 h-3 mr-1" /> Pending Approval
+                              </span>
+                            )}
+                            {connector.status === 'not_connected' && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#F5F5F5] text-[#808080] uppercase tracking-wider border border-[#E0E0E0]">
+                                Not Connected
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-[#5C4541] mt-1 lg:pr-4">{connector.desc}</p>
+                          
+                          {connector.status === 'connected' && connector.lastSync && (
+                            <p className="text-xs text-[#A88C87] mt-1.5 font-medium flex items-center">
+                              Last synced: {connector.lastSync}
+                            </p>
                           )}
                         </div>
-                        <p className="text-sm text-[#5C4541] mt-1 lg:pr-4">{connector.desc}</p>
-                        
-                        {connector.status === 'connected' && connector.lastSync && (
-                          <p className="text-xs text-[#A88C87] mt-1.5 font-medium flex items-center">
-                            Last synced: {connector.lastSync}
-                          </p>
+                      </div>
+
+                      <div className="shrink-0 flex items-center w-full sm:w-auto pl-16 sm:pl-0">
+                        {connector.status === 'connected' ? (
+                          <button 
+                            onClick={() => setExpandedConnector(expandedConnector === connector.id ? null : connector.id)}
+                            className={`w-full sm:w-auto px-4 py-2 border shadow-sm rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${expandedConnector === connector.id ? 'bg-[#FDF8F3] border-[#DDA77B] text-[#7A2B20]' : 'bg-white border-[#EAE3D9] text-[#5C4541] hover:bg-[#FDF8F3] hover:text-[#3E1510]'}`}
+                          >
+                            {expandedConnector === connector.id ? 'Close' : 'Manage'}
+                          </button>
+                        ) : (
+                          <button className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-[#FDF8F3] border border-[#DDA77B] shadow-sm text-[#7A2B20] rounded-lg font-bold text-sm hover:bg-[#F5E1C8] transition-colors whitespace-nowrap">
+                            Connect <ChevronRight className="w-4 h-4 ml-1" />
+                          </button>
                         )}
                       </div>
                     </div>
-
-                    <div className="shrink-0 flex items-center w-full sm:w-auto pl-16 sm:pl-0">
-                      {connector.status === 'connected' ? (
-                        <button className="w-full sm:w-auto px-4 py-2 bg-white border border-[#EAE3D9] shadow-sm rounded-lg text-[#5C4541] font-bold text-sm hover:bg-[#FDF8F3] hover:text-[#3E1510] transition-colors whitespace-nowrap">
-                          Manage
-                        </button>
-                      ) : (
-                        <button className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-[#FDF8F3] border border-[#DDA77B] shadow-sm text-[#7A2B20] rounded-lg font-bold text-sm hover:bg-[#F5E1C8] transition-colors whitespace-nowrap">
-                          Connect <ChevronRight className="w-4 h-4 ml-1" />
-                        </button>
-                      )}
-                    </div>
+                    
+                    {/* Collapsible Manage Panel */}
+                    {expandedConnector === connector.id && connector.status === 'connected' && (
+                      <div className="px-5 pb-5 sm:pl-20 border-t border-[#EAE3D9] bg-[#FDF8F3] pt-4 rounded-b-2xl">
+                        <div className="mb-5">
+                          <h5 className="text-[10px] font-bold text-[#A88C87] uppercase tracking-wider mb-2">Authenticated Account</h5>
+                          <div className="inline-flex items-center space-x-2 bg-white border border-[#EAE3D9] px-3 py-1.5 rounded-md shadow-sm">
+                            <div className="w-2 h-2 rounded-full bg-[#2E6B3B]"></div>
+                            <span className="text-sm font-semibold text-[#3E1510]">{connector.accountName}</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-[10px] font-bold text-[#A88C87] uppercase tracking-wider mb-3 flex items-center">
+                            <Sparkles className="w-3 h-3 mr-1 text-[#DDA77B]" /> Supported Narrative Queries
+                          </h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {connector.queries?.map(query => (
+                              <label key={query} className="flex items-start space-x-3 bg-white border border-[#EAE3D9] p-3 rounded-lg cursor-pointer hover:border-[#DDA77B] transition-colors shadow-sm">
+                                <div className="flex items-center h-5">
+                                  <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-[#DDA77B] text-[#7A2B20] focus:ring-[#7A2B20]" />
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-[#3E1510]">{query}</span>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

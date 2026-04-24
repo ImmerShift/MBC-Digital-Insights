@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Filter, Share2, Download, Sparkles, ChevronDown, Check, Menu, LogOut } from 'lucide-react';
+import { Calendar, Filter, Share2, Download, Sparkles, ChevronDown, Check, Menu, LogOut, X } from 'lucide-react';
 import { auth, signOut } from '../lib/firebase';
 import { useDateRange } from '../contexts/DateContext';
 
@@ -7,16 +7,23 @@ interface HeaderProps {
   onMenuClick?: () => void;
 }
 
+const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export function Header({ onMenuClick }: HeaderProps) {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isCustomRangeOpen, setIsCustomRangeOpen] = useState(false);
+  const [customStart, setCustomStart] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return formatDate(d);
+  });
+  const [customEnd, setCustomEnd] = useState(formatDate(new Date()));
   const { label, setDateRange } = useDateRange();
-
-  const formatDate = (d: Date) => {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
 
   const calculateDateRange = (labelName: string) => {
     const today = new Date();
@@ -75,7 +82,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <h2 className="text-xl md:text-2xl font-serif font-bold text-[#3E1510] whitespace-nowrap truncate">Executive Dashboard</h2>
           <span className="px-2.5 py-1 rounded-full bg-[#F3EFE9] text-[#7A2B20] text-xs font-semibold border border-[#EAE3D9] hidden lg:flex items-center whitespace-nowrap shrink-0">
             <Sparkles className="w-3 h-3 mr-1.5 shrink-0" />
-            AI Analysis Active
+            Intelligence Active
           </span>
         </div>
       </div>
@@ -131,11 +138,64 @@ export function Header({ onMenuClick }: HeaderProps) {
                     )}
                   </button>
                 ))}
-                <div className="border-t border-[#EAE3D9] mt-2 pt-2 px-4 pb-1">
-                  <p className="text-[10px] uppercase font-bold text-[#A88C87] tracking-wider mb-2">Custom Range</p>
-                  <button className="w-full py-2 bg-[#F9F7F4] text-[#7A2B20] text-xs font-bold rounded-lg border border-[#EAE3D9] hover:bg-[#F3EFE9] transition-colors">
-                    Select Dates
-                  </button>
+                <div className="border-t border-[#EAE3D9] mt-2 pt-2 px-4 pb-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-[10px] uppercase font-bold text-[#A88C87] tracking-wider">Custom Range</p>
+                    {isCustomRangeOpen && (
+                      <button onClick={(e) => { e.stopPropagation(); setIsCustomRangeOpen(false); }} className="text-[#A88C87] hover:text-[#7A2B20]">
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {!isCustomRangeOpen ? (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsCustomRangeOpen(true);
+                      }}
+                      className="w-full py-2 bg-[#F9F7F4] text-[#7A2B20] text-xs font-bold rounded-lg border border-[#EAE3D9] hover:bg-[#F3EFE9] transition-colors"
+                    >
+                      Select Dates
+                    </button>
+                  ) : (
+                    <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex flex-col space-y-1.5">
+                        <label className="text-[10px] font-semibold text-[#5C4541]">Start Date</label>
+                        <input 
+                          type="date" 
+                          value={customStart}
+                          onChange={(e) => setCustomStart(e.target.value)}
+                          className="w-full text-xs font-medium text-[#5C4541] border border-[#EAE3D9] rounded-md p-2 focus:outline-none focus:border-[#DDA77B]"
+                        />
+                      </div>
+                      <div className="flex flex-col space-y-1.5">
+                        <label className="text-[10px] font-semibold text-[#5C4541]">End Date</label>
+                        <input 
+                          type="date" 
+                          value={customEnd}
+                          onChange={(e) => setCustomEnd(e.target.value)}
+                          className="w-full text-xs font-medium text-[#5C4541] border border-[#EAE3D9] rounded-md p-2 focus:outline-none focus:border-[#DDA77B]"
+                        />
+                      </div>
+                      <button 
+                        onClick={() => {
+                          const formatDateLabel = (dateString: string) => {
+                            if (!dateString) return '';
+                            const d = new Date(dateString);
+                            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                          };
+                          const newLabel = `${formatDateLabel(customStart)} - ${formatDateLabel(customEnd)}`;
+                          setDateRange(customStart, customEnd, newLabel);
+                          setIsDatePickerOpen(false);
+                          setIsCustomRangeOpen(false);
+                        }}
+                        className="w-full py-2 mt-1 bg-[#3E1510] text-[#EAE3D9] text-xs font-bold rounded-lg hover:bg-[#5D221A] transition-colors"
+                      >
+                        Apply Range
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </>

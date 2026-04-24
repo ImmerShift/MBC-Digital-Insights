@@ -33,7 +33,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         `}>
           <div className="flex items-center space-x-2 mb-1.5">
              <Sparkles className={`w-3.5 h-3.5 ${isSpike ? 'text-[#DDA77B]' : 'text-[#A88C87]'}`} />
-             <span className={`text-[11px] font-bold uppercase tracking-wider ${isSpike ? 'text-[#A43927]' : 'text-[#7A2B20]'}`}>AI Analysis</span>
+             <span className={`text-[11px] font-bold uppercase tracking-wider ${isSpike ? 'text-[#A43927]' : 'text-[#7A2B20]'}`}>Intelligence</span>
           </div>
           <p className="italic text-[13px]">{aiInsight}</p>
         </div>
@@ -47,18 +47,18 @@ export function RevenueChart() {
   return (
     <div className="bg-white border border-[#EAE3D9] rounded-2xl shadow-sm p-6 lg:p-8 relative overflow-hidden">
       <div className="absolute top-4 right-4 text-[10px] font-semibold text-[#A88C87] uppercase tracking-wider flex items-center gap-1.5 bg-[#F9F7F4] border border-[#EAE3D9] px-2.5 py-1.5 rounded-full pointer-events-none">
-        ✦ Hover peak for AI insight
+        ✦ Hover peak for Intelligence
       </div>
       
       <div className="flex items-start justify-between mb-8 pr-48">
         <div>
           <h3 className="text-xl font-serif font-bold text-[#3E1510] flex items-center">
-            Digital Bookings & Content Reach
+            Rhythm of Resonance
             <span className="ml-3 px-2 py-0.5 rounded text-[11px] font-bold bg-[#EBF4ED] text-[#2E6B3B] flex items-center uppercase tracking-wider border border-[#D5E6D9]">
               <TrendingUp className="w-3 h-3 mr-1" /> +15.2%
             </span>
           </h3>
-          <p className="text-sm text-[#A88C87] font-medium mt-1">Correlation between content interactions and table bookings</p>
+          <p className="text-sm text-[#A88C87] font-medium mt-1">Digital momentum mapped against audience discovery</p>
         </div>
       </div>
       
@@ -90,9 +90,9 @@ export function RevenueChart() {
             />
             
             {/* The maroon MBC color line */}
-            <Area name="Revenue (IDR)" yAxisId="left" type="monotone" dataKey="revenue" stroke="#7A2B20" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 6, strokeWidth: 0, fill: '#7A2B20' }} />
+            <Area name="Sustenance (Revenue)" yAxisId="left" type="monotone" dataKey="revenue" stroke="#7A2B20" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 6, strokeWidth: 0, fill: '#7A2B20' }} />
             {/* The sandy/beige accent line */}
-            <Area name="Content Reach" yAxisId="right" type="monotone" dataKey="reach" stroke="#DDA77B" strokeWidth={3} strokeDasharray="0" fillOpacity={1} fill="url(#colorReach)" activeDot={{ r: 5, strokeWidth: 0, fill: '#DDA77B' }} />
+            <Area name="Echoes (Reach)" yAxisId="right" type="monotone" dataKey="reach" stroke="#DDA77B" strokeWidth={3} strokeDasharray="0" fillOpacity={1} fill="url(#colorReach)" activeDot={{ r: 5, strokeWidth: 0, fill: '#DDA77B' }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

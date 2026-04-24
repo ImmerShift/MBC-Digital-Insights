@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { RevenueChart } from './components/RevenueChart';
@@ -15,10 +15,12 @@ import { auth, onAuthStateChanged } from './lib/firebase';
 import { Login } from './components/Login';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'executive' | 'meta' | 'ga4' | 'tiktok' | 'gads' | 'gsc' | 'youtube' | 'draft' | 'connectors'>('connectors');
+  type TabType = 'executive' | 'meta' | 'ga4' | 'tiktok' | 'gads' | 'gsc' | 'youtube' | 'draft' | 'connectors';
+  const [activeTab, setActiveTab] = useState<TabType>('connectors');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -67,7 +69,7 @@ function App() {
           <div className="md:hidden p-4 relative">
             <select 
               value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value as any)}
+              onChange={(e) => setActiveTab(e.target.value as TabType)}
               className="w-full bg-[#FDF8F3] border border-[#EAE3D9] text-[#3E1510] font-bold rounded-lg px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-[#DDA77B]/50 shadow-sm"
             >
               <option value="executive">Executive Overview</option>
@@ -90,8 +92,7 @@ function App() {
             {/* Left Scroll Button */}
             <button 
               onClick={() => {
-                const container = document.getElementById('tab-scroll-container');
-                if (container) container.scrollBy({ left: -200, behavior: 'smooth' });
+                if (scrollContainerRef.current) scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
               }}
               className="mr-2 p-1.5 rounded-full text-[#A88C87] hover:text-[#3E1510] hover:bg-[#F9F7F4] transition-colors"
             >
@@ -100,7 +101,7 @@ function App() {
 
             {/* Scrollable Tabs */}
             <div 
-              id="tab-scroll-container"
+              ref={scrollContainerRef}
               className="flex-1 overflow-x-auto no-scrollbar scroll-smooth relative"
               style={{ paddingBottom: '16px', marginBottom: '-16px' }} // Fix to hide scrollbar but align borders
             >
@@ -167,8 +168,7 @@ function App() {
             {/* Right Scroll Button */}
             <button 
               onClick={() => {
-                const container = document.getElementById('tab-scroll-container');
-                if (container) container.scrollBy({ left: 200, behavior: 'smooth' });
+                if (scrollContainerRef.current) scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
               }}
               className="ml-2 p-1.5 rounded-full text-[#A88C87] hover:text-[#3E1510] hover:bg-[#F9F7F4] transition-colors"
             >
@@ -277,7 +277,7 @@ function App() {
                   Month-End Draft Ready for Review
                 </h3>
                 <p className="text-[#E6DFD6] text-xs md:text-sm font-medium w-full lg:max-w-xl">
-                  The AI has generated the narrative analysis based on April's aggregated data.
+                  Intelligence has woven the narrative from the gathered moments of April.
                 </p>
               </div>
               <button 
