@@ -22,6 +22,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const [overviewSessions, setOverviewSessions] = useState<number | null>(null);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -29,6 +31,20 @@ function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'executive' && user && overviewSessions === null) {
+      import('./utils/api').then(({ fetchGA4Data }) => {
+        fetchGA4Data().then(data => {
+          if (data && typeof data.sessions === 'number') {
+             setOverviewSessions(data.sessions);
+          } else if (data && typeof data.sessions === 'string') {
+             setOverviewSessions(parseInt(data.sessions, 10));
+          }
+        }).catch(err => console.error("Failed to fetch GA4 for overview", err));
+      });
+    }
+  }, [activeTab, user, overviewSessions]);
 
   // Simple placeholder for platforms not fully built out yet
   const PlaceholderView = ({ title, icon: Icon }: { title: string; icon: React.ElementType }) => (
@@ -199,10 +215,12 @@ function App() {
                   {/* Top Stat Cards as a single full-width layout */}
                   <div className="bg-white border border-[#EAE3D9] rounded-2xl shadow-sm flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-[#EAE3D9] overflow-hidden">
                     <div className="p-6 flex-1 hover:bg-[#F9F7F4] hover:border-l-4 hover:border-l-[#7A2B20] transition-all duration-200 relative group">
-                      <p className="text-[11px] font-bold text-[#A88C87] uppercase tracking-wider mb-2">Total Digital Revenue</p>
+                      <p className="text-[11px] font-bold text-[#A88C87] uppercase tracking-wider mb-2">Total Website Sessions</p>
                       <div className="flex items-end justify-between">
-                        <h3 className="text-3xl font-bold tracking-tight text-[#3E1510]">IDR 169.5<span className="text-xl text-[#A88C87] font-medium">M</span></h3>
-                        <div className="px-2.5 py-1 bg-[#EBF4ED] text-[#2E6B3B] text-[11px] font-bold rounded uppercase tracking-wider border border-[#D5E6D9]">+12%</div>
+                        <h3 className="text-3xl font-bold tracking-tight text-[#3E1510]">
+                          {overviewSessions !== null ? overviewSessions.toLocaleString() : '-'}
+                        </h3>
+                        <div className="px-2.5 py-1 bg-[#EBF4ED] text-[#2E6B3B] text-[11px] font-bold rounded uppercase tracking-wider border border-[#D5E6D9]">LIVE</div>
                       </div>
                     </div>
                     

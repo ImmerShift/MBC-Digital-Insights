@@ -1,11 +1,27 @@
-import React from 'react';
-import { useGA4Data } from '../hooks/useRealData';
+import React, { useState, useEffect } from 'react';
+import { fetchGA4Data } from '../utils/api';
 import { Globe, Users, Clock, MousePointer2, Sparkles, PieChart as PieChartIcon, Loader2, AlertCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { GA4TopPage, GA4TrafficSource } from '../types';
 
 export function Ga4PlatformOverview() {
-  const { overview, topPages, trafficSources, isLoading, error } = useGA4Data();
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const result = await fetchGA4Data();
+        setData(result);
+      } catch (err: any) {
+        setError(err.message || 'Unknown error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   if (isLoading) {
     return (
@@ -15,25 +31,25 @@ export function Ga4PlatformOverview() {
     );
   }
 
-  if (error) {
+  if (error || !data) {
     return (
       <div className="flex flex-col h-[50vh] items-center justify-center text-center p-6 bg-[#FFF9F9] border border-[#FEE2E2] rounded-2xl">
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
           <span className="text-red-600 font-bold">!</span>
         </div>
         <h3 className="font-serif font-bold text-xl text-[#3E1510] mb-2">The oracle is currently unreachable</h3>
-        <p className="text-[#A43927] max-w-md">{error}</p>
+        <p className="text-[#A43927] max-w-md">{error || 'No data found'}</p>
       </div>
     );
   }
 
-  // Fallback to empty if not present
-  const ga4Kpis = overview || { sessions: 0, users: 0, bounceRate: 0, avgSessionDuration: 0 };
-  const ga4TopPages = topPages || [];
-  const ga4TrafficSources = trafficSources || [];
+  const ga4Kpis = data || { sessions: 0, users: 0, bounceRate: 0, avgSession: 0 };
+  const ga4TopPages = data.topPages || [];
+  const ga4TrafficSources = data.trafficSources || [];
 
-  // Format avgSessionDuration from seconds to mm:ss
-  const formatTime = (seconds: number) => {
+  // Format avgSession from string/number to mm:ss
+  const formatTime = (value: any) => {
+    const seconds = parseFloat(value) || 0;
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
@@ -83,14 +99,14 @@ export function Ga4PlatformOverview() {
                 <MousePointer2 className="w-4 h-4" />
                 <span className="text-[10px] font-bold uppercase tracking-wider">Bounce Rate</span>
               </div>
-              <p className="text-xl font-bold text-[#3E1510]">{(ga4Kpis.bounceRate * 100).toFixed(1)}%</p>
+              <p className="text-xl font-bold text-[#3E1510]">{ga4Kpis.bounceRate}%</p>
             </div>
             <div className="bg-white border border-[#EAE3D9] rounded-xl p-4">
               <div className="flex items-center space-x-2 text-[#A88C87] mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="text-[10px] font-bold uppercase tracking-wider">Avg Session</span>
               </div>
-              <p className="text-xl font-bold text-[#3E1510]">{formatTime(ga4Kpis.avgSessionDuration)}</p>
+              <p className="text-xl font-bold text-[#3E1510]">{formatTime(ga4Kpis.avgSession)}</p>
             </div>
           </div>
 

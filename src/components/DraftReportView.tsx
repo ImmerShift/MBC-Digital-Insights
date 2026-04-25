@@ -112,15 +112,15 @@ export function DraftReportView() {
       {/* Editor Space */}
       <div className="flex-1 flex overflow-y-auto px-4 py-8 md:py-12 justify-center custom-scrollbar flex-col items-center">
           
-        {(ga4Error || youtubeError) && (
+        {(ga4Error || (youtubeError && youtubeError !== 'YouTube account not linked')) && (
           <div className="w-full max-w-[850px] mb-6 flex items-start space-x-3 bg-[#FFF9F9] border border-[#FEE2E2] text-[#A43927] p-4 rounded-lg shadow-sm">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
               <h3 className="text-sm font-bold text-[#A43927]">Warning: Unable to fetch live data</h3>
               <p className="text-sm font-medium mt-1 text-[#A43927]/80">
                 {ga4Error && <span>GA4: {ga4Error}</span>}
-                {ga4Error && youtubeError && <br />}
-                {youtubeError && <span>YouTube: {youtubeError}</span>}
+                {ga4Error && youtubeError && youtubeError !== 'YouTube account not linked' && <br />}
+                {youtubeError && youtubeError !== 'YouTube account not linked' && <span>YouTube: {youtubeError}</span>}
               </p>
             </div>
           </div>

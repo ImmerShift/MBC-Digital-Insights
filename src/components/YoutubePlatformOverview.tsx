@@ -1,10 +1,26 @@
-import React from 'react';
-import { useYouTubeData } from '../hooks/useRealData';
+import React, { useState, useEffect } from 'react';
+import { fetchYouTubeData } from '../utils/api';
 import { PlaySquare, Clock, Users, Activity, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 import { YouTubeVideo } from '../types';
 
 export function YoutubePlatformOverview() {
-  const { overview, topVideos, isLoading, error } = useYouTubeData();
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const result = await fetchYouTubeData();
+        setData(result);
+      } catch (err: any) {
+        setError(err.message || 'Unknown error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   if (isLoading) {
     return (
@@ -14,9 +30,24 @@ export function YoutubePlatformOverview() {
     );
   }
 
-  if (error) {
+  if (error || !data) {
+    const isUnlinked = error === 'YouTube account not linked' || error === 'No data found' || (error && error.includes('account not linked'));
     const isForbidden = error.includes('Forbidden') || error.includes('youtubeAnalytics.reports.query');
     
+    if (isUnlinked) {
+      return (
+        <div className="flex flex-col h-[50vh] items-center justify-center text-center p-6 bg-[#FDF8F3] border border-[#EAE3D9] rounded-2xl">
+          <div className="w-12 h-12 rounded-full bg-[#EAE3D9] flex items-center justify-center mb-4">
+            <PlaySquare className="w-6 h-6 text-[#A88C87]" />
+          </div>
+          <h3 className="font-serif font-bold text-xl text-[#3E1510] mb-2">Connect YouTube</h3>
+          <p className="text-[#5C4541] max-w-md mb-4 text-sm">
+            The configured Google account does not currently have access to a YouTube channel's analytics. Please link a channel or switch accounts to view video performance.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col h-[50vh] items-center justify-center text-center p-6 bg-[#FFF9F9] border border-[#FEE2E2] rounded-2xl">
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
@@ -42,8 +73,8 @@ export function YoutubePlatformOverview() {
     );
   }
 
-  const youtubeKpis = overview || { views: 0, watchMinutes: 0, avgDuration: 0, subscribersGained: 0 };
-  const youtubeVideos = topVideos || [];
+  const youtubeKpis = data || { views: 0, watchMinutes: 0, avgDuration: 0, subscribersGained: 0 };
+  const youtubeVideos = data.topVideos || [];
 
   // Format avgSessionDuration from seconds to mm:ss
   const formatTime = (seconds: number) => {

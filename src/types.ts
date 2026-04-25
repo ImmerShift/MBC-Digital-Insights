@@ -92,7 +92,8 @@ export interface GSCOverview {
 }
 
 export interface GSCQuery {
-  query: string;
+  keys?: string[];
+  query?: string;
   clicks: number;
   impressions: number;
   ctr: number;

@@ -1,10 +1,26 @@
-import React from 'react';
-import { useGSCData } from '../hooks/useRealData';
+import React, { useState, useEffect } from 'react';
+import { fetchGSCData } from '../utils/api';
 import { Search, MousePointerClick, Eye, Target, Sparkles, TrendingUp, ArrowUpRight, Loader2, AlertCircle } from 'lucide-react';
 import { GSCQuery } from '../types';
 
 export function GscPlatformOverview() {
-  const { overview, topQueries, isLoading, error } = useGSCData();
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const result = await fetchGSCData();
+        setData(result);
+      } catch (err: any) {
+        setError(err.message || 'Unknown error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   if (isLoading) {
     return (
@@ -14,20 +30,20 @@ export function GscPlatformOverview() {
     );
   }
 
-  if (error) {
+  if (error || !data) {
     return (
       <div className="flex flex-col h-[50vh] items-center justify-center text-center p-6 bg-[#FFF9F9] border border-[#FEE2E2] rounded-2xl">
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
           <span className="text-red-600 font-bold">!</span>
         </div>
         <h3 className="font-serif font-bold text-xl text-[#3E1510] mb-2">The oracle is currently unreachable</h3>
-        <p className="text-[#A43927] max-w-md">{error}</p>
+        <p className="text-[#A43927] max-w-md">{error || 'No data found'}</p>
       </div>
     );
   }
 
-  const gscKpis = overview || { clicks: 0, impressions: 0, ctr: 0, position: 0 };
-  const gscQueries = topQueries || [];
+  const gscKpis = data || { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  const gscQueries = data.topQueries || [];
 
   return (
     <div className="space-y-6">
@@ -96,8 +112,8 @@ export function GscPlatformOverview() {
                   {gscQueries.map((item: GSCQuery, idx: number) => (
                     <tr key={idx} className="hover:bg-[#F9F7F4] transition-colors cursor-pointer">
                       <td className="px-6 py-4">
-                        <span className="font-medium text-[#5C4541] truncate max-w-[200px] block" title={item.query}>
-                          {item.query}
+                        <span className="font-medium text-[#5C4541] truncate max-w-[200px] block" title={item.keys ? item.keys[0] : item.query}>
+                          {item.keys ? item.keys[0] : item.query}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right text-[#3E1510] font-bold">{(item.clicks / 1000).toFixed(1)}k</td>
