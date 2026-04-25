@@ -1,28 +1,38 @@
-import { GoogleGenAI } from "@google/genai";
+export async function generateMonthlyDraft(mockData: any, proxyUrl: string): Promise<string> {
+  
+  // Step 3.3: The Translator
+  const parsedContext = {
+    ga4_traffic: `The website had ${mockData.ga4.sessions} total sessions and ${mockData.ga4.users} users this month. The bounce rate was ${mockData.ga4.bounceRate}%.`,
+    
+    meta_ads: mockData.metaAds.map((ad: any) => `The campaign '${ad.name}' spent ${(ad.spend / 1000000).toFixed(1)}M IDR, driving ${ad.conversions} guest actions with a ROAS of ${ad.roas}x.`).join(' '),
+    
+    organic_social: `Our top performing organic content: ${mockData.metaOrganic.map((p: any) => `'${p.title}' (${p.format}) reached ${p.reach} people.`).join(' ')}`,
+    
+    youtube: `YouTube storytelling generated ${mockData.youtube.views} views and ${mockData.youtube.watchTime} watch minutes.`
+  };
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-export async function generateMonthlyDraft(mockData: any) {
-  const prompt = `Role: You are the lead brand storyteller and marketing strategist for a luxury Balinese beach club. You are writing an end-of-month performance review to present to the General Manager.
-
-Tone & Style: The narrative must be highly poetic, organic, and deeply rooted in Balinese heritage. Frame the digital performance as a "narrative thread that connects the guest to the island’s soul." Emphasize the organic luxury and "majestic bamboo sanctuary" aesthetic.
-
-Strict Ban: Do not use transactional, standard "ad-agency" jargon. The copy must never feel "terlalu menjual" (too salesy). Instead of writing "we drove 83 conversions," describe it as "inviting digital touchpoints that successfully guided guests to our sanctuary."
-
-Format: Output strictly in cleanly formatted Markdown with no markdown code block backticks surrounding it. Include three sections: The Digital Guest Journey, Campaign Spotlights, and Content Resonance.
-
-Text Only: Generate ONLY text-based narrative copywriting. Do not attempt to generate, code, or suggest image prompts.
-
-Here is the data context to weave into the narrative:
-${JSON.stringify(mockData, null, 2)}
-`;
-
+  // Step 3.4 & 3.5: Mailing the Letter & Receiving the Story
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8", 
+      },
+      body: JSON.stringify(parsedContext),
     });
-    return response.text;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data.text; // This is the beautiful markdown story!
+
   } catch (error) {
     console.error("Error generating narrative:", error);
     throw error;

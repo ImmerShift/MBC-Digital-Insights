@@ -15,13 +15,29 @@ export function YoutubePlatformOverview() {
   }
 
   if (error) {
+    const isForbidden = error.includes('Forbidden') || error.includes('youtubeAnalytics.reports.query');
+    
     return (
       <div className="flex flex-col h-[50vh] items-center justify-center text-center p-6 bg-[#FFF9F9] border border-[#FEE2E2] rounded-2xl">
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
           <span className="text-red-600 font-bold">!</span>
         </div>
         <h3 className="font-serif font-bold text-xl text-[#3E1510] mb-2">The oracle is currently unreachable</h3>
-        <p className="text-[#A43927] max-w-md">{error}</p>
+        <p className="text-[#A43927] max-w-md mb-4">{error}</p>
+        
+        {isForbidden && (
+          <div className="text-left bg-white p-4 rounded-lg border border-red-200 text-sm text-[#5C4541] max-w-xl shadow-sm">
+            <h4 className="font-bold text-[#A43927] mb-2">How to fix this issue:</h4>
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>Open your Google Apps Script project.</li>
+              <li>Go to <strong>Services</strong> (the plus icon <kbd>+</kbd> on the left sidebar).</li>
+              <li>Add the <strong>YouTube Analytics API</strong>.</li>
+              <li>Go to <strong>Project Settings</strong> (gear icon) and click your Google Cloud Project link.</li>
+              <li>In Google Cloud Console, search for "YouTube Analytics API" and click <strong>Enable</strong>.</li>
+              <li>Ensure the Google account running the script has a YouTube channel and the channel has some statistics.</li>
+            </ol>
+          </div>
+        )}
       </div>
     );
   }
